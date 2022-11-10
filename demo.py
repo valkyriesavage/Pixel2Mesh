@@ -14,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import tensorflow as tf
-import cPickle as pickle
+import tensorflow.v1.compat as tf
+import pickle
+import numpy as np
 from skimage import io,transform
 from p2m.api import GCN
 from p2m.utils import *
+import gzip
 
 # Set random seed
 seed = 1024
@@ -70,7 +72,13 @@ sess.run(tf.global_variables_initializer())
 model.load(sess)
 
 # Runing the demo
-pkl = pickle.load(open('Data/ellipsoid/info_ellipsoid.dat', 'rb'))
+# solved with https://stackoverflow.com/questions/11305790/pickle-incompatibility-of-numpy-arrays-between-python-2-and-3
+fname = 'Data/ellipsoid/info_ellipsoid.dat'
+pkl = ''
+with open(fname, 'rb') as f:
+    u = pickle._Unpickler(f)
+    u.encoding = 'latin1'
+    pkl = u.load()
 feed_dict = construct_feed_dict(pkl, placeholders)
 
 img_inp = load_image(FLAGS.image)
@@ -84,4 +92,4 @@ mesh = np.vstack((vert, face))
 pred_path = FLAGS.image.replace('.png', '.obj')
 np.savetxt(pred_path, mesh, fmt='%s', delimiter=' ')
 
-print 'Saved to', pred_path
+print('Saved to', pred_path)
